@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>{{title}}</title>
+<style type="text/css">
+.state_0  {
+    background-position:0 0;
+    background-repeat:no-repeat;
+    background-image:url("/static/img/waiting.png");
+    display:inline-block;
+    vertical-align:middle;
+    line-height:20px;
+    width: 20px;
+    height:20px;
+}
+.state_1  {
+    background-position:0 0;
+    background-repeat:no-repeat;
+    background-image:url("/static/img/load.gif");
+    display:inline-block;
+    vertical-align:middle;
+    line-height:20px;
+    width: 20px;
+    height:20px;
+}
+.state_2  {
+    background-position:0 0;
+    background-repeat:no-repeat;
+    background-image:url("/static/img/tick_circle.png");
+    display:inline-block;
+    vertical-align:bottom;
+    line-height:20px;
+    width: 20px;
+    height:20px;
+}
+.state_3  {
+    background-position:0 0;
+    background-repeat:no-repeat;
+    background-image:url("/static/img/cross_circle.png");
+    display:inline-block;
+    vertical-align:top;
+    line-height:20px;
+    width: 20px;
+    height:20px;
+}
+</style>
+<link href="/static/css/style.css" rel="stylesheet" type="text/css">
+<link href="/static/multiple-select/multiple-select.css" rel="stylesheet">
+<script src="/static/js/jquery.min.js" type="text/javascript"></script>
+<script src="/static/multiple-select/jquery.multiple.select.js"></script>
+<script src="/static/js/admin.js" type="text/javascript"></script>
+</head>
+<body>
+<script type="text/javascript">
+function update_state() {
+    $.getJSON("/salt_deploy/update_state", {'page':{{page}}}, function(json){
+        var data = json;
+        for(var i = 0; i<data.length;i++) {
+            $("#state_"+data[i].job_id).html("<em class='state_" + data[i].state + "'></em>");
+            $("#update_time_"+data[i].job_id).html(data[i].update_time);
+        }
+    });
+}
+
+function change_info(){
+        var args = $("#key").serialize();
+        window.location = window.location.pathname + "?" + args;
+    }
+
+function del(id){
+    $.post("/salt_deploy/ajax_deploy", {"act":'del_job', "id":id}, function(json){ 
+        alert(json);
+        window.location.reload();
+    });
+}
+$(document).ready(function() {
+    //自动刷新状态
+    setInterval("update_state()", 3000);
+
+    $("#key").keydown(function(e){
+        if(e.keyCode==13){
+            change_info()
+        }
+    });
+
+});
+</script>
+<div class="adminTable">
+<div class="infoForm">
+<section class="content-header">
+<input id="search" name="search" type="submit" style="float:right" value="新建任务" class="Btn" onclick="openWin('/salt_deploy/add_job');"/><input id="search" name="search" type="submit" style="float:right" value="搜索" class="Btn" onclick="change_info()"/><input id="key" name="key" type="text" class="form_2" style="float:right" value="{{ key }}"/>
+    <h1>{{title}}</h1>
+</section>
+</div>
+<table width="100%" border="1" cellspacing="0" cellpadding="0">
+<thead>
+  <tr>
+    <th align="left" valign="middle">ID</th>
+    <th align="center" valign="middle">模块名</th>
+    <th align="center" valign="middle">匹配类型</th>
+    <th align="left" valign="middle">minions</th>
+    <th align="center" valign="middle">当前状态</th>
+    <th align="center" valign="middle">创建人</th>
+    <th align="center" valign="middle">创建时间</th>
+    <th align="center" valign="middle">更新时间</th>
+    <th align="center" valign="middle">查看日志</th>
+  </tr>
+</thead>
+<tbody>
+{% load pagination_tags %}
+{% autopaginate rets pagenum %}
+{% for ret in rets %}
+  <tr>
+    <td align="left" valign="middle">{{ret.id}}</td>
+    <td align="center" valign="middle">{{ret.mod.mod_name}}</td>
+    <td align="center" valign="middle">{{ret.g_type}}</td>
+    <td align="left" valign="middle">{{ret.minions}}</td>
+    <td id='state_{{ret.id}}' align="center" valign="middle"><em class="state_{{ ret.state }}"></em></td>
+    <td align="center" valign="middle">{{ret.creator}}</td>
+    <td align="center" valign="middle">{{ret.create_time}}</td>
+    <td id='update_time_{{ret.id}}' align="center" valign="middle">{{ret.update_time}}</td>
+    <td align="center" valign="middle"><a href="javascript:void(0);" class="handle" onclick="openWin('/salt_deploy/show_log?id={{ ret.id}}');"><img title='查看日志' src="/static/img/information.png" alt="show"></a></td>
+  </tr>
+{% endfor %}
+</tbody>
+</table>
+{% paginate %}
+</div>
+</body>
+</html>

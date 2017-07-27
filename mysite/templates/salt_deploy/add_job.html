@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+<link href="/static/css/style.css" rel="stylesheet" type="text/css">
+<link href="/static/multiple-select/multiple-select.css" rel="stylesheet">
+<link href="/static/loading/loading.css" rel="stylesheet" type="text/css">
+<script src="/static/js/jquery-1.7.1.min.js" type="text/javascript"></script>
+<script src="/static/multiple-select/jquery.multiple.select.js"></script>
+<script src="/static/loading/loading-min.js"></script>
+<script src="/static/loading/jquery.bgiframe.min.js"></script>
+<script src="/static/js/admin.js" type="text/javascript"></script>
+</head>
+<body>
+<script type="text/javascript">
+/*function match_minions(){
+    var g_type = $('input:radio:checked').val();
+    var minions = $("#minions").val();
+    loading.show();
+    $.post("/salt_deploy/ajax_deploy", {"act":'match_minions', "g_type":g_type,"minions":minions}, function(json){ 
+    loading.hide();
+        alert(json); 
+    });
+}
+*/
+$(document).ready(function() {
+    var loading = new ol.loading({id:"loading"});
+
+    $('#submit').click(function(){
+        if(confirm("确认操作吗？")){ 
+            $.post("/salt_deploy/ajax_deploy", $("form").serialize(), function(json){ 
+                alert(json);
+                window.close();
+                window.parent.opener.location.reload();
+            });
+            return false;
+        }
+    });
+
+    $('#match_minions').click(function(){
+        var g_type = $('input:radio:checked').val();
+        var minions = $("#minions").val();
+        loading.show();
+        $.post("/salt_deploy/ajax_deploy", {"act":'match_minions', "g_type":g_type,"minions":minions}, function(json){ 
+            loading.hide();
+            alert(json); 
+        });
+        return false;
+    });
+});
+</script>
+<div id="loading">
+<div class="adminTable">
+<div class="infoForm">
+<h3>{{ title }}</h3>
+说明：<br>
+对目标服务器分组9种方式，这9种方式的标示符分别为：<br>
+D -- 默认全局模式，例如: web-0*<br>
+N -- 配置文件分组 NodeGroup:(defined in master config file)<br>
+G -- 针对 Grains 做单个匹配，例如：os:Centos<br>
+E -- 针对 minion 针对正则表达式做匹配，例如：web\d+.(dev|qa|prod).loc<br>
+P -- 针对 Grains 做正则表达式匹配，例如：os:(RedHat|Fedora|CentOS)<br>
+L -- 针对 minion 做列表匹配，例如：minion1.example.com,minion3.domain.com or bl*.domain.com<br>
+I -- 针对 Pillar 做单个匹配，例如：pdata:foobar<br>
+S -- 针对子网或是 IP 做匹配，例如：192.168.1.0/24 or 192.168.1.100<br>
+R -- 针对客户端范围做匹配，例如： %foo.bar<br>
+使用 L 列表的方式，必须把 minion 列出来，或者是列出几台后，在后面接 or 或者 and 表达式， or 或者 and 后面接的表达式后面可以使用正则表达式。<br>
+注：想使用正则表达式，最好的方式就是使用 E<br>
+<br><br>
+<form id="infoForm">
+<input name="act" type="hidden" class="form_2 searchIpnutBtn" value="{{ act }}">
+<input name="id" type="hidden" class="form_2 searchIpnutBtn" value="{{ id }}">
+<label class="control-label" for="inputEmail">模块名</label>
+<select name="mod_id" class="form_2 w150">
+    <option value=''>请选择模块名</option>
+{% for ret in mod_list %}
+    <option value={{ret.id}}>{{ret.mod_name}}</option>
+{% endfor %}
+</select><br><br>
+<label class="control-label" for="inputEmail">匹配类型</label>
+{% for ret in g_type_list %}
+<label> <input type="radio" name="g_type" {% ifequal ret 'D' %}checked="checked"{% endifequal %} value="{{ret}}">{{ret}}  </label>
+{% endfor %}
+<br><br>
+<label class="control-label" for="inputEmail">minions</label>
+<input name="minions" id="minions" type="text" class="form_4"><input id="match_minions" type="submit" value="查询匹配主机" class="Btn" />
+<br><br>
+<input id="submit" type="submit" value="提交" class="Btn" />
+</form>
+</div>
+</div>
+</body>
+</html>
